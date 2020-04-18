@@ -10,6 +10,14 @@ from serializers import GeoLite
 IP_SERIALIZER = GeoLite()
 
 
+def get_request_ip(request):
+    if not request.headers.getlist("X-Forwarded-For"):
+        ip = request.remote_addr
+    else:
+        ip = request.headers.getlist("X-Forwarded-For")[0]
+    return ip
+
+
 def json_dump(data):
     return json.dumps(data, separators=(',', ':'))
 
@@ -27,8 +35,10 @@ def location(payload, row):
         response = requests.get("http://www.geoplugin.net/json.gp", params=dict(ip=ip), timeout=10)
         if response.ok:
             ip_data = IP_SERIALIZER.load(response.json())
-    except:
-        pass
+        else:
+            print(f"Error Occurred while requesting IP {response.content} {response.status_code}")
+    except Exception as e:
+        print(f"Error Occurred while loading IP {e}")
     row.append(json_dump(ip_data))
 
 

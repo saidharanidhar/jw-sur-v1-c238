@@ -3,8 +3,14 @@ import requests
 from retry import retry
 
 from constants import HTTP_METHODS
-from helpers import get_row_from_data
+from helpers import get_row_from_data, get_request_ip
 from settings import CLIENT, app, RETRY_SETTINGS, FILENAME
+
+
+@app.route('/', methods=["GET"])
+def health_check():
+    from flask import request
+    return get_request_ip(request)
 
 
 @app.route('/<regex(".*"):url>/end/', methods=HTTP_METHODS)
@@ -21,14 +27,15 @@ def proxy(url):
     return response.text
 
 
-@app.route('/final/', methods=['POST'])
-def save():
+@app.route('/submit/', methods=['POST'])
+def submit():
     from flask import request
     data = request.get_json()
 
-    file_name = data.get("file_name", FILENAME)
+    ip = get_request_ip(request)
     sheet_id = int(data.get("sheet_id", 0))
-    row = get_row_from_data(request.remote_addr, data["data"])
+    file_name = data.get("file_name", FILENAME)
+    row = get_row_from_data(ip, data["data"])
 
     try:
         to_google_sheet(file_name, sheet_id, row)
