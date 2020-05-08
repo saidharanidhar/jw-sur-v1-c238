@@ -1,10 +1,12 @@
 import requests
-
 from retry import retry
 
 from constants import HTTP_METHODS
 from helpers import get_row_from_data, get_request_ip
+from lookup import movie_list
+from recommender.get_similar_movies import get_similar_movies
 from settings import CLIENT, app, RETRY_SETTINGS, FILENAME
+from utils import get_movie_posters
 
 
 @app.route('/', methods=["GET"])
@@ -25,6 +27,37 @@ def proxy(url):
         print(f"Error Occurred {response.content} {response.status_code}")
         return "Error", 500
     return response.text
+
+
+@app.route('/fetch/', methods=["GET"])
+def get_movies():
+    from flask import request
+    seq = 0
+    page = 1
+    page_size = 10
+    try:
+        seq = int(request.args.get("seq", "0"))
+        page = int(request.args.get("page", "1"))
+        page_size = int(request.args.get("page_size", "1"))
+    except:
+        pass
+
+    required_indexes = [i * 2 + seq for i in range((page - 1) * page_size, page * page_size)]
+
+    title_list = []
+    if required_indexes[-1] < len(movie_list):
+        title_list = [movie_list[index] for index in required_indexes]
+
+    return dict(titles=get_movie_posters(title_list))
+
+
+@app.route('/recommendations/', methods=["POST"])
+def get_recommendations():
+    from flask import request
+    selection = request.json.get("selection", [])
+    titles_required = int(request.json.get("titles_required", 20))
+    title_list = get_similar_movies(selection, titles_required)
+    return dict(titles=get_movie_posters(title_list))
 
 
 @app.route('/submit/', methods=['POST'])

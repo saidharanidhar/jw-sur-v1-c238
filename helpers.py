@@ -43,17 +43,19 @@ def location(payload, row):
 
 
 def feedback(payload, row):
-    row.append(json_dump(payload.get("feedbackData", {}).get("feedback", {})))
+    row.append(json_dump(payload.get("feedbackData", {})))
 
 
 def choice_titles_count(payload, row):
     titles = payload.get("choiceData", {}).get("titles", [])
-    count = sum([len(title_row_data.get("items", [])) for title_row_data in titles])
+    count = len(titles) - 1
     row.append(count)
 
 
 def survey_titles_count(payload, row):
-    row.append(len(payload.get("surveyData", {}).get("titles", [])))
+    titles = payload.get("surveyData", {}).get("titles", [])
+    count = len(titles) - 1
+    row.append(count)
 
 
 def choice_time(payload, row):
