@@ -25,7 +25,7 @@ def get_posters(title):
                 }
             )
         )
-        response = requests.get(f"https://apis.justwatch.com/content/titles/en_IN/popular?body={params}")
+        response = requests.get(f"https://apis.justwatch.com/content/titles/en_US/popular?body={params}")
         if response.ok:
             data = response.json()["items"]
             if data and (is_similar(data[0].get("title", ""), title) or True):
